@@ -132,7 +132,7 @@ func (c *command) Book(line string) (stop bool) {
 	}
 	c.last = id
 
-	printBook(b)
+	printBook(b, !c.shell)
 	return false
 }
 

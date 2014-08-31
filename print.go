@@ -37,9 +37,11 @@ func printWelcome(idx index) {
 	}
 }
 
-func printBook(b book) {
+func printBook(b book, showId bool) {
 	fieldStyle := chalk.Bold.NewStyle().WithForeground(chalk.Cyan)
-	fmt.Println(fieldStyle, "Id:       ", chalk.Reset, b.Id)
+	if showId {
+		fmt.Println(fieldStyle, "Id:       ", chalk.Reset, b.Id)
+	}
 	fmt.Println(fieldStyle, "Title:    ", chalk.Reset, b.Title)
 	fmt.Print(fieldStyle, " Author:     ", chalk.Reset)
 	for _, a := range b.Author {
