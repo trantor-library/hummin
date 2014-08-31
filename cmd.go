@@ -7,16 +7,19 @@ import (
 )
 
 type command struct {
-	cmd  *cmd.Cmd
-	t    *trantor
-	ids  map[int]string
-	last string
+	cmd   *cmd.Cmd
+	t     *trantor
+	ids   []string
+	last  string
+	query string
+	page  int
+	more  bool
 }
 
 func Cmd(t *trantor) *command {
 	commander := &cmd.Cmd{Prompt: "> "}
 	commander.Init()
-	c := &command{commander, t, nil, ""}
+	c := &command{commander, t, nil, "", "", 0, false}
 
 	commander.Add(cmd.Command{
 		"book",
@@ -52,6 +55,18 @@ func Cmd(t *trantor) *command {
 		"s",
 		`search books`,
 		c.Search,
+	})
+
+	commander.Add(cmd.Command{
+		"more",
+		`more books from previows search`,
+		c.More,
+	})
+
+	commander.Add(cmd.Command{
+		"m",
+		`more books from previows search`,
+		c.More,
 	})
 
 	commander.Add(cmd.Command{
@@ -122,18 +137,35 @@ func (c *command) Get(line string) (stop bool) {
 }
 
 func (c *command) Search(line string) (stop bool) {
-	s, err := c.t.Search(line)
+	c.query = line
+	c.page = 0
+	c.ids = []string{}
+	c.doSearch()
+	return false
+}
+
+func (c *command) More(line string) (stop bool) {
+	if c.more {
+		c.page++
+		c.doSearch()
+	}
+	return false
+}
+
+func (c *command) doSearch() {
+	s, err := c.t.Search(c.query, c.page)
 	if err != nil {
 		printErr("An error ocurred searching:", err)
-		return false
+		return
 	}
 
-	c.ids = make(map[int]string, len(s.Books))
-	for i, b := range s.Books {
-		c.ids[i] = b.Id
+	idx := len(c.ids)
+	c.page = s.Page
+	for _, b := range s.Books {
+		c.ids = append(c.ids, b.Id)
 	}
-	printSearch(s)
-	return false
+	c.more = s.Found > (s.Page+1)*s.Items
+	printSearch(s, idx, c.more)
 }
 
 func (c *command) Exit(line string) (stop bool) {

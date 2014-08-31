@@ -56,9 +56,10 @@ func printBook(b book) {
 	fmt.Println(b.Description)
 }
 
-func printSearch(s search) {
+func printSearch(s search, startIdx int, more bool) {
 	fmt.Println("   Found", s.Found)
-	for i, b := range s.Books {
+	i := startIdx
+	for _, b := range s.Books {
 		fmt.Print(chalk.Magenta, "#", i, " ", chalk.Reset)
 		if i < 10 {
 			fmt.Print(" ")
@@ -76,8 +77,9 @@ func printSearch(s search) {
 			fmt.Print(a, ", ")
 		}
 		fmt.Println(chalk.Reset)
+		i++
 	}
-	if s.Found > s.Items {
+	if more {
 		fmt.Println("(more)")
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/hailiang/gosocks"
 )
@@ -87,9 +88,9 @@ func (t trantor) Download(id string) error {
 	return nil
 }
 
-func (t trantor) Search(query string) (search, error) {
+func (t trantor) Search(query string, page int) (search, error) {
 	var s search
-	err := t.get(BASE_URL+"search/"+"?q="+query+"&fmt=json", &s)
+	err := t.get(BASE_URL+"search/"+"?q="+query+"&p="+strconv.Itoa(page)+"&fmt=json", &s)
 	return s, err
 }
 
