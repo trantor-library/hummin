@@ -27,9 +27,9 @@ func printWelcome(idx index) {
 	fmt.Println()
 
 	if len(idx.News) > 0 {
-		fmt.Println(chalk.Yellow, "<<", idx.News[0].Text, ">>", chalk.Reset)
+		fmt.Println(chalk.Yellow, "<<", idx.News[0].Date, "-", idx.News[0].Text, ">>", chalk.Reset)
+		fmt.Println()
 	}
-	fmt.Println()
 }
 
 func printBook(b book) {
@@ -89,6 +89,12 @@ func printListBooks(books []book, startIdx int) {
 		}
 		fmt.Println(chalk.Reset)
 		i++
+	}
+}
+
+func printNews(ns []news) {
+	for _, n := range ns {
+		fmt.Println(chalk.Yellow, n.Date, chalk.Reset, n.Text)
 	}
 }
 

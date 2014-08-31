@@ -96,7 +96,7 @@ func (t trantor) Search(query string, page int) (search, error) {
 
 func (t trantor) News() ([]news, error) {
 	var n []news
-	err := t.get(BASE_URL+"news"+"?fmt=json", &n)
+	err := t.get(BASE_URL+"news/?fmt=json", &n)
 	return n, err
 }
 

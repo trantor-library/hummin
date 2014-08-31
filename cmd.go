@@ -70,6 +70,18 @@ func Cmd(t *trantor) *command {
 	})
 
 	commander.Add(cmd.Command{
+		"news",
+		`get the list of news`,
+		c.News,
+	})
+
+	commander.Add(cmd.Command{
+		"n",
+		`get the list of news`,
+		c.News,
+	})
+
+	commander.Add(cmd.Command{
 		"exit",
 		`exit program`,
 		c.Exit,
@@ -155,6 +167,16 @@ func (c *command) More(line string) (stop bool) {
 		c.page++
 		c.doSearch()
 	}
+	return false
+}
+
+func (c *command) News(line string) (stop bool) {
+	ns, err := c.t.News()
+	if err != nil {
+		printErr("An error ocurred getting the list of news:", err)
+		return false
+	}
+	printNews(ns)
 	return false
 }
 
