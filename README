@@ -1,0 +1,10 @@
+Hummin
+======
+
+Command line client for the imperial library of trantor (http://xfmro77i3lixucja.onion/).
+
+= Install =
+
+apt-get install tor libreadline-dev libncurses5-dev
+go get github.com/gobs/cmd code.google.com/p/go.net/proxy
+
