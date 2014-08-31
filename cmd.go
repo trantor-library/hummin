@@ -26,13 +26,31 @@ func Cmd(t *trantor) *command {
 	})
 
 	commander.Add(cmd.Command{
+		"b",
+		"book id|num\nDisplays the book from the id or the index number in the last search",
+		c.Book,
+	})
+
+	commander.Add(cmd.Command{
 		"get",
 		"get [id|num]\nDownloads the last seen book, or an id or the index number from the last search",
 		c.Get,
 	})
 
 	commander.Add(cmd.Command{
+		"g",
+		"get [id|num]\nDownloads the last seen book, or an id or the index number from the last search",
+		c.Get,
+	})
+
+	commander.Add(cmd.Command{
 		"search",
+		`search books`,
+		c.Search,
+	})
+
+	commander.Add(cmd.Command{
+		"s",
 		`search books`,
 		c.Search,
 	})
@@ -45,6 +63,12 @@ func Cmd(t *trantor) *command {
 
 	commander.Add(cmd.Command{
 		"quit",
+		`same as exit`,
+		c.Exit,
+	})
+
+	commander.Add(cmd.Command{
+		"q",
 		`same as exit`,
 		c.Exit,
 	})
