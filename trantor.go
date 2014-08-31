@@ -79,12 +79,16 @@ func (t trantor) Book(id string) (book, error) {
 	return b, err
 }
 
-func (t trantor) Download(id string) error {
+func (t trantor) Download(id string, useWorker bool) error {
 	b, err := t.Book(id)
 	if err != nil {
 		return err
 	}
-	t.download <- b
+	if useWorker {
+		t.download <- b
+	} else {
+		t.downloadBook(b)
+	}
 	return nil
 }
 
@@ -112,18 +116,22 @@ func (t trantor) get(url string, v interface{}) error {
 
 func (t trantor) downloadWorker() {
 	for b := range t.download {
-		resp, err := t.client.Get(BASE_URL + b.Download)
-		if err != nil {
-			printErr("There was a problem with the download:", err)
-			continue
-		}
-		err = store(resp.Body, b.Title+".epub")
-		if err != nil {
-			printErr("There was a problem storing:", err)
-			continue
-		}
-		printDownloadFinished(b.Title)
+		t.downloadBook(b)
 	}
+}
+
+func (t trantor) downloadBook(b book) {
+	resp, err := t.client.Get(BASE_URL + b.Download)
+	if err != nil {
+		printErr("There was a problem with the download:", err)
+		return
+	}
+	err = store(resp.Body, b.Title+".epub")
+	if err != nil {
+		printErr("There was a problem storing:", err)
+		return
+	}
+	printDownloadFinished(b.Title)
 }
 
 func store(src io.Reader, dest string) error {
