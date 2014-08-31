@@ -14,6 +14,11 @@ func main() {
 }
 
 func comm() {
+	if os.Args[1] == "--help" || os.Args[1] == "-h" {
+		printUsage(os.Args[0])
+		return
+	}
+
 	t := Trantor()
 	cmd := Cmd(t)
 	cmd.OneCmd(strings.Join(os.Args[1:], " "))

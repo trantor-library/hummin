@@ -6,6 +6,11 @@ import (
 	"github.com/ttacon/chalk"
 )
 
+func printUsage(prog string) {
+	fmt.Println(prog, "[command [args]]")
+	fmt.Println("Commands: book, get, search, news")
+}
+
 func printErr(msg string, err error) {
 	fmt.Println(chalk.Red, msg, err, chalk.Reset)
 }
