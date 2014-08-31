@@ -102,6 +102,10 @@ func Cmd(t *trantor) *command {
 	return c
 }
 
+func (c *command) OneCmd(line string) {
+	c.cmd.OneCmd(line)
+}
+
 func (c *command) SetBooks(books []book) {
 	for _, b := range books {
 		c.ids = append(c.ids, b.Id)
