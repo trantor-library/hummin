@@ -14,12 +14,13 @@ type command struct {
 	query string
 	page  int
 	more  bool
+	shell bool
 }
 
 func Cmd(t *trantor) *command {
 	commander := &cmd.Cmd{Prompt: "> "}
 	commander.Init()
-	c := &command{commander, t, []string{}, "", "", 0, false}
+	c := &command{commander, t, []string{}, "", "", 0, false, false}
 
 	commander.Add(cmd.Command{
 		"book",
@@ -113,6 +114,7 @@ func (c *command) SetBooks(books []book) {
 }
 
 func (c *command) Loop() {
+	c.shell = true
 	c.cmd.CmdLoop()
 }
 
@@ -195,7 +197,7 @@ func (c *command) doSearch() {
 	c.page = s.Page
 	c.SetBooks(s.Books)
 	c.more = s.Found > (s.Page+1)*s.Items
-	printSearch(s, idx, c.more)
+	printSearch(s, idx, c.more, !c.shell)
 }
 
 func (c *command) Exit(line string) (stop bool) {

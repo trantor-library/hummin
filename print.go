@@ -28,7 +28,7 @@ func printWelcome(idx index) {
 	fmt.Println()
 
 	fmt.Println("Last added books:")
-	printListBooks(idx.Last_added, 0)
+	printListBooks(idx.Last_added, 0, false)
 	fmt.Println()
 
 	if len(idx.News) > 0 {
@@ -39,6 +39,7 @@ func printWelcome(idx index) {
 
 func printBook(b book) {
 	fieldStyle := chalk.Bold.NewStyle().WithForeground(chalk.Cyan)
+	fmt.Println(fieldStyle, "Id:       ", chalk.Reset, b.Id)
 	fmt.Println(fieldStyle, "Title:    ", chalk.Reset, b.Title)
 	fmt.Print(fieldStyle, " Author:     ", chalk.Reset)
 	for _, a := range b.Author {
@@ -65,21 +66,26 @@ func printBook(b book) {
 	fmt.Println(b.Description)
 }
 
-func printSearch(s search, startIdx int, more bool) {
+func printSearch(s search, startIdx int, more bool, fullId bool) {
 	fmt.Println("   Found", s.Found)
-	printListBooks(s.Books, startIdx)
+	printListBooks(s.Books, startIdx, fullId)
 	if more {
 		fmt.Println("(more)")
 	}
 }
 
-func printListBooks(books []book, startIdx int) {
+func printListBooks(books []book, startIdx int, fullId bool) {
 	i := startIdx
 	for _, b := range books {
-		fmt.Print(chalk.Magenta, "#", i, " ", chalk.Reset)
-		if i < 10 {
-			fmt.Print(" ")
+		if fullId {
+			fmt.Print(chalk.Magenta, b.Id, " ", chalk.Reset)
+		} else {
+			fmt.Print(chalk.Magenta, "#", i, " ", chalk.Reset)
+			if i < 10 {
+				fmt.Print(" ")
+			}
 		}
+
 		fmt.Print("=> ")
 		if len(b.Lang) > 0 {
 			fmt.Print(chalk.Cyan, "[", b.Lang[0][:2], "]", chalk.Reset)
