@@ -11,5 +11,6 @@ func main() {
 	printWelcome(idx)
 
 	cmd := Cmd(t)
+	cmd.SetBooks(idx.Last_added)
 	cmd.Loop()
 }

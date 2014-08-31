@@ -19,7 +19,7 @@ type command struct {
 func Cmd(t *trantor) *command {
 	commander := &cmd.Cmd{Prompt: "> "}
 	commander.Init()
-	c := &command{commander, t, nil, "", "", 0, false}
+	c := &command{commander, t, []string{}, "", "", 0, false}
 
 	commander.Add(cmd.Command{
 		"book",
@@ -90,19 +90,21 @@ func Cmd(t *trantor) *command {
 	return c
 }
 
+func (c *command) SetBooks(books []book) {
+	for _, b := range books {
+		c.ids = append(c.ids, b.Id)
+	}
+}
+
 func (c *command) Loop() {
 	c.cmd.CmdLoop()
 }
 
 func (c *command) Book(line string) (stop bool) {
-	id := line
-	if len(line) != 16 {
-		n, err := strconv.Atoi(line)
-		if err != nil || len(c.ids) <= n {
-			printErr("Not valid search index: "+line, nil)
-			return false
-		}
-		id = c.ids[n]
+	id := c.getId(line, "")
+	if id == "" {
+		printErr("Not valid id "+line, nil)
+		return false
 	}
 
 	b, err := c.t.Book(id)
@@ -117,23 +119,27 @@ func (c *command) Book(line string) (stop bool) {
 }
 
 func (c *command) Get(line string) (stop bool) {
-	id := c.last
-	if len(line) == 16 {
-		id = line
-	} else if len(line) > 0 {
-		n, err := strconv.Atoi(line)
-		if err != nil || len(c.ids) <= n {
-			printErr("Not valid search index: "+line, nil)
-			return false
-		}
-		id = c.ids[n]
-	}
+	id := c.getId(line, c.last)
 	err := c.t.Download(id)
 	if err != nil {
 		printErr("An error ocurred downloading the book:", err)
 		return false
 	}
 	return false
+}
+
+func (c *command) getId(line string, fallBack string) string {
+	id := fallBack
+	if len(line) == 16 {
+		id = line
+	} else if len(line) > 0 {
+		n, err := strconv.Atoi(line)
+		if err != nil || len(c.ids) <= n {
+			return id
+		}
+		id = c.ids[n]
+	}
+	return id
 }
 
 func (c *command) Search(line string) (stop bool) {
@@ -161,9 +167,7 @@ func (c *command) doSearch() {
 
 	idx := len(c.ids)
 	c.page = s.Page
-	for _, b := range s.Books {
-		c.ids = append(c.ids, b.Id)
-	}
+	c.SetBooks(s.Books)
 	c.more = s.Found > (s.Page+1)*s.Items
 	printSearch(s, idx, c.more)
 }

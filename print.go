@@ -22,6 +22,10 @@ func printWelcome(idx index) {
 	fmt.Println("      Num books:", idx.Count)
 	fmt.Println()
 
+	fmt.Println("Last added books:")
+	printListBooks(idx.Last_added, 0)
+	fmt.Println()
+
 	if len(idx.News) > 0 {
 		fmt.Println(chalk.Yellow, "<<", idx.News[0].Text, ">>", chalk.Reset)
 	}
@@ -58,8 +62,15 @@ func printBook(b book) {
 
 func printSearch(s search, startIdx int, more bool) {
 	fmt.Println("   Found", s.Found)
+	printListBooks(s.Books, startIdx)
+	if more {
+		fmt.Println("(more)")
+	}
+}
+
+func printListBooks(books []book, startIdx int) {
 	i := startIdx
-	for _, b := range s.Books {
+	for _, b := range books {
 		fmt.Print(chalk.Magenta, "#", i, " ", chalk.Reset)
 		if i < 10 {
 			fmt.Print(" ")
@@ -78,9 +89,6 @@ func printSearch(s search, startIdx int, more bool) {
 		}
 		fmt.Println(chalk.Reset)
 		i++
-	}
-	if more {
-		fmt.Println("(more)")
 	}
 }
 
