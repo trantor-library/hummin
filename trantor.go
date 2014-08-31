@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -114,15 +113,15 @@ func (t trantor) downloadWorker() {
 	for b := range t.download {
 		resp, err := t.client.Get(BASE_URL + b.Download)
 		if err != nil {
-			fmt.Println("There was a problem with the download:", err)
+			printErr("There was a problem with the download:", err)
 			continue
 		}
 		err = store(resp.Body, b.Title+".epub")
 		if err != nil {
-			fmt.Println("There was a problem storing:", err)
+			printErr("There was a problem storing:", err)
 			continue
 		}
-		fmt.Println("Download of", b.Title, "finished")
+		printDownloadFinished(b.Title)
 	}
 }
 
