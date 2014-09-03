@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -94,7 +95,8 @@ func (t trantor) Download(id string, useWorker bool) error {
 
 func (t trantor) Search(query string, page int) (search, error) {
 	var s search
-	err := t.get(BASE_URL+"search/"+"?q="+query+"&p="+strconv.Itoa(page)+"&fmt=json", &s)
+	escaped_query := url.QueryEscape(query)
+	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+strconv.Itoa(page)+"&fmt=json", &s)
 	return s, err
 }
 
