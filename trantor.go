@@ -62,6 +62,7 @@ type index struct {
 type configrc struct {
 	Global struct {
 		Downloads string
+		Lang      string
 	}
 }
 
@@ -105,6 +106,13 @@ func (t trantor) Download(id string, useWorker bool) error {
 
 func (t trantor) Search(query string, page int) (search, error) {
 	var s search
+	lang_in_query := strings.Count(query, "lang:")
+	if lang_in_query < 1 {
+		lang := getValueFromConfigrc("lang")
+		if lang != "" {
+			query = query + " lang:" + lang
+		}
+	}
 	escaped_query := url.QueryEscape(query)
 	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+strconv.Itoa(page)+"&fmt=json", &s)
 	return s, err
@@ -171,6 +179,7 @@ func getValueFromConfigrc(key string) (value string) {
 		printErr("Wrong config file:", err)
 		return
 	}
+
 	if key == "downloads" {
 		downloads_folder := cfg.Global.Downloads
 		downloads_folder = expandPath(downloads_folder)
@@ -187,6 +196,9 @@ func getValueFromConfigrc(key string) (value string) {
 			}
 		}
 		return downloads_folder
+	} else if key == "lang" {
+		lang := cfg.Global.Lang
+		return lang
 	}
 	return ""
 }
