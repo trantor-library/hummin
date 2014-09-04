@@ -6,5 +6,13 @@ Command line client for the imperial library of trantor (http://xfmro77i3lixucja
 = Install =
 
 apt-get install tor libreadline-dev libncurses5-dev
-go get github.com/gobs/cmd github.com/hailiang/gosocks github.com/ttacon/chalk
+go get github.com/gobs/cmd github.com/hailiang/gosocks github.com/ttacon/chalk code.google.com/p/gcfg
+
+= Config =
+
+cat ~/.humminrc
+
+[Global]
+downloads = ~/ebooks
+lang = en
 
