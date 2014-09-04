@@ -6,12 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"code.google.com/p/gcfg"
 	"github.com/hailiang/gosocks"
 )
 
@@ -106,8 +104,9 @@ func (t trantor) Download(id string, useWorker bool) error {
 
 func (t trantor) Search(query string, page int) (search, error) {
 	var s search
-	lang_in_query := strings.Count(query, "lang:")
-	if lang_in_query < 1 {
+	if hasSubString(query, "lang:any") {
+		query = strings.Replace(query, "lang:any", "", -1)
+	} else if !hasSubString(query, "lang:") {
 		lang := getValueFromConfigrc("lang")
 		if lang != "" {
 			query = query + " lang:" + lang
@@ -152,55 +151,6 @@ func (t trantor) downloadBook(b book) {
 		return
 	}
 	printDownloadFinished(b.Title)
-}
-
-func expandPath(path string) (rpath string) {
-	usr, _ := user.Current()
-	dir := usr.HomeDir
-	if path[:2] == "~/" {
-		path = strings.Replace(path, "~/", dir+"/", 1)
-	}
-	return path
-}
-
-func getValueFromConfigrc(key string) (value string) {
-	config_file := expandPath(CONFIG_FILE)
-	if _, err := os.Stat(config_file); err != nil {
-		if os.IsNotExist(err) {
-			return ""
-		} else {
-			printErr("Error looking for config file:", err)
-			return ""
-		}
-	}
-	var cfg configrc
-	err := gcfg.ReadFileInto(&cfg, config_file)
-	if err != nil {
-		printErr("Wrong config file:", err)
-		return
-	}
-
-	if key == "downloads" {
-		downloads_folder := cfg.Global.Downloads
-		downloads_folder = expandPath(downloads_folder)
-		downloads_folder, err = filepath.Abs(downloads_folder)
-		if err != nil {
-			printErr("Cannot get absolute path:", err)
-			return
-		}
-		if _, err := os.Stat(downloads_folder); os.IsNotExist(err) {
-			err := os.MkdirAll(downloads_folder, 0770)
-			if err != nil {
-				printErr("Could not create downloads folder:", err)
-				return
-			}
-		}
-		return downloads_folder
-	} else if key == "lang" {
-		lang := cfg.Global.Lang
-		return lang
-	}
-	return ""
 }
 
 func store(src io.Reader, dest string) error {

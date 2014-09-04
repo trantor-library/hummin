@@ -16,3 +16,8 @@ cat ~/.humminrc
 downloads = ~/ebooks
 lang = en
 
+= Preferred language =
+
+If you want to override the preferred language selection in your .hummirc,
+you can specify `lang:any` in your query.
+
