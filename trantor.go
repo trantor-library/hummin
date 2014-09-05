@@ -57,13 +57,6 @@ type index struct {
 	Last_added []book
 }
 
-type configrc struct {
-	Global struct {
-		Downloads string
-		Lang      string
-	}
-}
-
 func Trantor() *trantor {
 	var t trantor
 	dialSocksProxy := socks.DialSocksProxy(socks.SOCKS5, PROXY)
@@ -112,8 +105,12 @@ func (t trantor) Search(query string, page int) (search, error) {
 			query = query + " lang:" + lang
 		}
 	}
+	num := getValueFromConfigrc("num")
+	if num == "" {
+		num = "20"
+	}
 	escaped_query := url.QueryEscape(query)
-	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+strconv.Itoa(page)+"&fmt=json", &s)
+	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+strconv.Itoa(page)+"&fmt=json"+"&num="+num, &s)
 	return s, err
 }
 

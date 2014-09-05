@@ -9,6 +9,14 @@ import (
 	"code.google.com/p/gcfg"
 )
 
+type configrc struct {
+	Global struct {
+		Downloads string
+		Lang      string
+		Num       string
+	}
+}
+
 func expandPath(path string) (rpath string) {
 	usr, _ := user.Current()
 	dir := usr.HomeDir
@@ -54,6 +62,9 @@ func getValueFromConfigrc(key string) (value string) {
 	} else if key == "lang" {
 		lang := cfg.Global.Lang
 		return lang
+	} else if key == "num" {
+		num := cfg.Global.Num
+		return num
 	}
 	return ""
 }

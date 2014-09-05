@@ -15,6 +15,7 @@ cat ~/.humminrc
 [Global]
 downloads = ~/ebooks
 lang = en
+num = 20
 
 = Preferred language =
 
