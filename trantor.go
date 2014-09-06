@@ -163,3 +163,8 @@ func store(src io.Reader, dest string) error {
 	_, err = io.Copy(f, src)
 	return err
 }
+
+func hasSubString(str string, substr string) bool {
+	matches := strings.Count(str, substr)
+	return matches >= 1
+}
