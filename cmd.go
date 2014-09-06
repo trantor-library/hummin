@@ -9,7 +9,7 @@ import (
 type command struct {
 	cmd   *cmd.Cmd
 	t     *trantor
-	ids   []string
+	books []book
 	last  string
 	query string
 	page  int
@@ -20,7 +20,7 @@ type command struct {
 func Cmd(t *trantor) *command {
 	commander := &cmd.Cmd{Prompt: "> "}
 	commander.Init()
-	c := &command{commander, t, []string{}, "", "", 0, false, false}
+	c := &command{commander, t, []book{}, "", "", 0, false, false}
 
 	commander.Add(cmd.Command{
 		"book",
@@ -108,9 +108,7 @@ func (c *command) OneCmd(line string) {
 }
 
 func (c *command) SetBooks(books []book) {
-	for _, b := range books {
-		c.ids = append(c.ids, b.Id)
-	}
+	c.books = books
 }
 
 func (c *command) Loop() {
@@ -119,25 +117,31 @@ func (c *command) Loop() {
 }
 
 func (c *command) Book(line string) (stop bool) {
-	id := c.getId(line, "")
-	if id == "" {
-		printErr("Not valid id "+line, nil)
-		return false
+	var b book
+	id, n := c.getId(line, "")
+	if n != -1 {
+		b = c.books[n]
+	} else {
+		if id == "" {
+			printErr("Not valid id "+line, nil)
+			return false
+		}
+
+		var err error
+		b, err = c.t.Book(id)
+		if err != nil {
+			printErr("An error ocurred fetching the book info:", err)
+			return false
+		}
 	}
 
-	b, err := c.t.Book(id)
-	if err != nil {
-		printErr("An error ocurred fetching the book info:", err)
-		return false
-	}
-	c.last = id
-
+	c.last = b.Id
 	printBook(b, !c.shell)
 	return false
 }
 
 func (c *command) Get(line string) (stop bool) {
-	id := c.getId(line, c.last)
+	id, _ := c.getId(line, c.last)
 	err := c.t.Download(id)
 	if err != nil {
 		printErr("An error ocurred downloading the book:", err)
@@ -146,24 +150,26 @@ func (c *command) Get(line string) (stop bool) {
 	return false
 }
 
-func (c *command) getId(line string, fallBack string) string {
-	id := fallBack
+func (c *command) getId(line string, fallBack string) (id string, n int) {
+	n = -1
+	id = fallBack
 	if len(line) == 16 {
 		id = line
 	} else if len(line) > 0 {
-		n, err := strconv.Atoi(line)
-		if err != nil || len(c.ids) <= n {
-			return id
+		var err error
+		n, err = strconv.Atoi(line)
+		if err != nil || len(c.books) <= n {
+			return
 		}
-		id = c.ids[n]
+		id = c.books[n].Id
 	}
-	return id
+	return
 }
 
 func (c *command) Search(line string) (stop bool) {
 	c.query = line
 	c.page = 0
-	c.ids = []string{}
+	c.books = []book{}
 	c.doSearch()
 	return false
 }
@@ -193,7 +199,7 @@ func (c *command) doSearch() {
 		return
 	}
 
-	idx := len(c.ids)
+	idx := len(c.books)
 	c.page = s.Page
 	c.SetBooks(s.Books)
 	c.more = s.Found > (s.Page+1)*s.Items
