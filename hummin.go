@@ -25,13 +25,13 @@ func comm(cfg *Config) {
 		return
 	}
 
-	t := Trantor(cfg)
+	t := Trantor(cfg, false)
 	cmd := Cmd(t)
 	cmd.OneCmd(strings.Join(os.Args[1:], " "))
 }
 
 func shell(cfg *Config) {
-	t := Trantor(cfg)
+	t := Trantor(cfg, true)
 	printLoading()
 	idx, err := t.Index()
 	if err != nil {

@@ -138,7 +138,7 @@ func (c *command) Book(line string) (stop bool) {
 
 func (c *command) Get(line string) (stop bool) {
 	id := c.getId(line, c.last)
-	err := c.t.Download(id, c.shell)
+	err := c.t.Download(id)
 	if err != nil {
 		printErr("An error ocurred downloading the book:", err)
 		return false
