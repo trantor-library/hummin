@@ -6,26 +6,32 @@ import (
 )
 
 func main() {
+	cfg, err := ParseConfig(CONFIG_FILE)
+	if err != nil {
+		printErr("Error parsing config file: ", err)
+		return
+	}
+
 	if len(os.Args) > 1 {
-		comm()
+		comm(cfg)
 	} else {
-		shell()
+		shell(cfg)
 	}
 }
 
-func comm() {
+func comm(cfg *Config) {
 	if os.Args[1] == "--help" || os.Args[1] == "-h" {
 		printUsage(os.Args[0])
 		return
 	}
 
-	t := Trantor()
+	t := Trantor(cfg)
 	cmd := Cmd(t)
 	cmd.OneCmd(strings.Join(os.Args[1:], " "))
 }
 
-func shell() {
-	t := Trantor()
+func shell(cfg *Config) {
+	t := Trantor(cfg)
 	printLoading()
 	idx, err := t.Index()
 	if err != nil {

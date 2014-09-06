@@ -13,8 +13,59 @@ type configrc struct {
 	Global struct {
 		Downloads string
 		Lang      string
-		Num       string
+		Num       int
 	}
+}
+
+type Config struct {
+	Downloads string
+	Lang      string
+	Num       int
+}
+
+func ParseConfig(path string) (*Config, error) {
+	confrc := dummyConfigrc()
+	config_file := expandPath(path)
+	if _, err := os.Stat(config_file); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+	} else {
+		err := gcfg.ReadFileInto(confrc, config_file)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return parseConfig(confrc)
+}
+
+func dummyConfigrc() *configrc {
+	var confrc configrc
+	confrc.Global.Downloads = "."
+	confrc.Global.Num = 20
+	return &confrc
+}
+
+func parseConfig(confrc *configrc) (*Config, error) {
+	var cfg Config
+
+	downloads_expanded := expandPath(confrc.Global.Downloads)
+	downloads_folder, err := filepath.Abs(downloads_expanded)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := os.Stat(downloads_folder); os.IsNotExist(err) {
+		err := os.MkdirAll(downloads_folder, 0770)
+		if err != nil {
+			return nil, err
+		}
+	}
+	cfg.Downloads = downloads_folder
+
+	cfg.Lang = confrc.Global.Lang
+	cfg.Num = confrc.Global.Num
+	return &cfg, nil
 }
 
 func expandPath(path string) (rpath string) {
@@ -24,47 +75,4 @@ func expandPath(path string) (rpath string) {
 		path = strings.Replace(path, "~/", dir+"/", 1)
 	}
 	return path
-}
-
-func getValueFromConfigrc(key string) (value string) {
-	config_file := expandPath(CONFIG_FILE)
-	if _, err := os.Stat(config_file); err != nil {
-		if os.IsNotExist(err) {
-			return ""
-		} else {
-			printErr("Error looking for config file:", err)
-			return ""
-		}
-	}
-	var cfg configrc
-	err := gcfg.ReadFileInto(&cfg, config_file)
-	if err != nil {
-		printErr("Wrong config file:", err)
-		return
-	}
-
-	if key == "downloads" {
-		downloads_folder := cfg.Global.Downloads
-		downloads_folder = expandPath(downloads_folder)
-		downloads_folder, err = filepath.Abs(downloads_folder)
-		if err != nil {
-			printErr("Cannot get absolute path:", err)
-			return
-		}
-		if _, err := os.Stat(downloads_folder); os.IsNotExist(err) {
-			err := os.MkdirAll(downloads_folder, 0770)
-			if err != nil {
-				printErr("Could not create downloads folder:", err)
-				return
-			}
-		}
-		return downloads_folder
-	} else if key == "lang" {
-		lang := cfg.Global.Lang
-		return lang
-	} else if key == "num" {
-		num := cfg.Global.Num
-		return num
-	}
-	return ""
 }

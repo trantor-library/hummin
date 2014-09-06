@@ -14,6 +14,7 @@ import (
 )
 
 type trantor struct {
+	cfg      *Config
 	client   *http.Client
 	download chan book
 }
@@ -57,17 +58,22 @@ type index struct {
 	Last_added []book
 }
 
-func Trantor() *trantor {
+func Trantor(cfg *Config) *trantor {
 	var t trantor
 	dialSocksProxy := socks.DialSocksProxy(socks.SOCKS5, PROXY)
 	transport := &http.Transport{Dial: dialSocksProxy}
 	t.client = &http.Client{Transport: transport}
+	t.cfg = cfg
 
+	t.spanWorkers()
+	return &t
+}
+
+func (t *trantor) spanWorkers() {
 	t.download = make(chan book, 20)
 	for i := 0; i < DOWNLOAD_WORKERS; i++ {
 		go t.downloadWorker()
 	}
-	return &t
 }
 
 func (t trantor) Index() (index, error) {
@@ -100,17 +106,14 @@ func (t trantor) Search(query string, page int) (search, error) {
 	if hasSubString(query, "lang:any") {
 		query = strings.Replace(query, "lang:any", "", -1)
 	} else if !hasSubString(query, "lang:") {
-		lang := getValueFromConfigrc("lang")
-		if lang != "" {
-			query = query + " lang:" + lang
+		if t.cfg.Lang != "" {
+			query = query + " lang:" + t.cfg.Lang
 		}
 	}
-	num := getValueFromConfigrc("num")
-	if num == "" {
-		num = "20"
-	}
+	pageStr := strconv.Itoa(page)
+	numStr := strconv.Itoa(t.cfg.Num)
 	escaped_query := url.QueryEscape(query)
-	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+strconv.Itoa(page)+"&fmt=json"+"&num="+num, &s)
+	err := t.get(BASE_URL+"search/"+"?q="+escaped_query+"&p="+pageStr+"&fmt=json"+"&num="+numStr, &s)
 	return s, err
 }
 
@@ -142,7 +145,7 @@ func (t trantor) downloadBook(b book) {
 		printErr("There was a problem with the download:", err)
 		return
 	}
-	err = store(resp.Body, b.Title+".epub")
+	err = store(resp.Body, filepath.Join(t.cfg.Downloads, b.Title+".epub"))
 	if err != nil {
 		printErr("There was a problem storing:", err)
 		return
@@ -151,10 +154,6 @@ func (t trantor) downloadBook(b book) {
 }
 
 func store(src io.Reader, dest string) error {
-	folder := getValueFromConfigrc("downloads")
-	if folder != "" {
-		dest = filepath.Join(folder, dest)
-	}
 	f, err := os.Create(dest)
 	if err != nil {
 		return err
