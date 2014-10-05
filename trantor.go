@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -18,6 +21,7 @@ type trantor struct {
 	useWorkers    bool
 	client        *http.Client
 	download      chan book
+	upload        chan string
 	notifications chan Notification
 }
 
@@ -80,6 +84,11 @@ func (t *trantor) spanWorkers() {
 	for i := 0; i < DOWNLOAD_WORKERS; i++ {
 		go t.downloadWorker()
 	}
+
+	t.upload = make(chan string, 20)
+	for i := 0; i < UPLOAD_WORKERS; i++ {
+		go t.uploadWorker()
+	}
 }
 
 func (t trantor) Index() (index, error) {
@@ -103,6 +112,15 @@ func (t trantor) Download(id string) error {
 		t.download <- b
 	} else {
 		t.downloadBook(b)
+	}
+	return nil
+}
+
+func (t trantor) Upload(file string) error {
+	if t.useWorkers {
+		t.upload <- file
+	} else {
+		t.uploadBook(file)
 	}
 	return nil
 }
@@ -159,6 +177,55 @@ func (t trantor) downloadBook(b book) {
 		return
 	}
 	notification := Notification{"Download of '" + b.Title + "' finished", nil}
+	t.notifications <- notification
+}
+
+func (t trantor) uploadWorker() {
+	for file := range t.upload {
+		t.uploadBook(file)
+	}
+}
+
+func (t trantor) uploadBook(file string) {
+	f, err := os.Open(file)
+	if err != nil {
+		notification := Notification{"There was a problem opening the file '" + file + "':", err}
+		t.notifications <- notification
+		return
+	}
+	defer f.Close()
+
+	b := bytes.NewBufferString("")
+	w := multipart.NewWriter(b)
+	fw, err := w.CreateFormFile("epub", path.Base(file))
+	if err != nil {
+		notification := Notification{"There was a problem creating form file for '" + file + "':", err}
+		t.notifications <- notification
+		return
+	}
+	_, err = io.Copy(fw, f)
+	if err != nil {
+		notification := Notification{"There was a problem copying file '" + file + "':", err}
+		t.notifications <- notification
+		return
+	}
+	content_type := w.FormDataContentType()
+	w.Close()
+
+	res, err := t.client.Post(BASE_URL+"upload/", content_type, b)
+	if err != nil {
+		notification := Notification{"There was a problem with uploading '" + file + "':", err}
+		t.notifications <- notification
+		return
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		notification := Notification{"The server replied with a not ok status for '" + file + "': " + strconv.Itoa(res.StatusCode), nil}
+		t.notifications <- notification
+		return
+	}
+
+	notification := Notification{"Upload of '" + file + "' finished", nil}
 	t.notifications <- notification
 }
 

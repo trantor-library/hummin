@@ -65,6 +65,18 @@ func Cmd(t *trantor, notifications chan Notification) *command {
 	})
 
 	commander.Add(cmd.Command{
+		"put",
+		"put file_name\nUploads a book to trantor",
+		c.Put,
+	})
+
+	commander.Add(cmd.Command{
+		"p",
+		"put file_name\nUploads a book to trantor",
+		c.Put,
+	})
+
+	commander.Add(cmd.Command{
 		"search",
 		`search books`,
 		c.Search,
@@ -181,6 +193,15 @@ func (c *command) Get(line string) (stop bool) {
 	err := c.t.Download(id)
 	if err != nil {
 		printErr("An error ocurred downloading the book:", err)
+		return false
+	}
+	return false
+}
+
+func (c *command) Put(line string) (stop bool) {
+	err := c.t.Upload(line)
+	if err != nil {
+		printErr("An error ocurred uploading the book:", err)
 		return false
 	}
 	return false
