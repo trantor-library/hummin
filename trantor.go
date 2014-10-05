@@ -14,10 +14,11 @@ import (
 )
 
 type trantor struct {
-	cfg        *Config
-	useWorkers bool
-	client     *http.Client
-	download   chan book
+	cfg           *Config
+	useWorkers    bool
+	client        *http.Client
+	download      chan book
+	notifications chan Notification
 }
 
 type book struct {
@@ -59,13 +60,14 @@ type index struct {
 	Last_added []book
 }
 
-func Trantor(cfg *Config, useWorkers bool) *trantor {
+func Trantor(cfg *Config, notifications chan Notification, useWorkers bool) *trantor {
 	var t trantor
 	dialSocksProxy := socks.DialSocksProxy(socks.SOCKS5, PROXY)
 	transport := &http.Transport{Dial: dialSocksProxy}
 	t.client = &http.Client{Transport: transport}
 	t.cfg = cfg
 	t.useWorkers = useWorkers
+	t.notifications = notifications
 
 	if useWorkers {
 		t.spanWorkers()
@@ -146,15 +148,18 @@ func (t trantor) downloadWorker() {
 func (t trantor) downloadBook(b book) {
 	resp, err := t.client.Get(BASE_URL + b.Download)
 	if err != nil {
-		printErr("There was a problem with the download:", err)
+		notification := Notification{"There was a problem with the download:", err}
+		t.notifications <- notification
 		return
 	}
 	err = store(resp.Body, filepath.Join(t.cfg.Downloads, b.Title+".epub"))
 	if err != nil {
-		printErr("There was a problem storing:", err)
+		notification := Notification{"There was a problem storing:", err}
+		t.notifications <- notification
 		return
 	}
-	printDownloadFinished(b.Title)
+	notification := Notification{"Download of '" + b.Title + "' finished", nil}
+	t.notifications <- notification
 }
 
 func store(src io.Reader, dest string) error {

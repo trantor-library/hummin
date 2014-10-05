@@ -7,20 +7,38 @@ import (
 )
 
 type command struct {
-	cmd   *cmd.Cmd
-	t     *trantor
-	books []book
-	last  string
-	query string
-	page  int
-	more  bool
-	shell bool
+	cmd           *cmd.Cmd
+	t             *trantor
+	books         []book
+	last          string
+	query         string
+	page          int
+	more          bool
+	shell         bool
+	notifications chan Notification
 }
 
-func Cmd(t *trantor) *command {
+type Notification struct {
+	str string
+	err error
+}
+
+func Cmd(t *trantor, notifications chan Notification) *command {
 	commander := &cmd.Cmd{Prompt: "> "}
 	commander.Init()
-	c := &command{commander, t, []book{}, "", "", 0, false, false}
+	c := &command{
+		cmd:           commander,
+		t:             t,
+		books:         []book{},
+		last:          "",
+		query:         "",
+		page:          0,
+		more:          false,
+		shell:         false,
+		notifications: notifications,
+	}
+
+	commander.PostCmd = c.PostCmd
 
 	commander.Add(cmd.Command{
 		"book",
@@ -114,6 +132,24 @@ func (c *command) SetBooks(books []book) {
 func (c *command) Loop() {
 	c.shell = true
 	c.cmd.CmdLoop()
+}
+
+func (c *command) PostCmd(line string, stop bool) bool {
+	done := false
+	for !done {
+		select {
+		case n := <-c.notifications:
+			if n.err != nil {
+				printErr(n.str, n.err)
+			} else {
+				printNotification(n.str)
+			}
+		default:
+			done = true
+		}
+	}
+
+	return stop
 }
 
 func (c *command) Book(line string) (stop bool) {

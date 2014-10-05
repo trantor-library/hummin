@@ -11,27 +11,29 @@ func main() {
 		printErr("Error parsing config file: ", err)
 		return
 	}
+	notifications := make(chan Notification, 20)
 
 	if len(os.Args) > 1 {
-		comm(cfg)
+		comm(cfg, notifications)
 	} else {
-		shell(cfg)
+		shell(cfg, notifications)
 	}
 }
 
-func comm(cfg *Config) {
+func comm(cfg *Config, notifications chan Notification) {
 	if os.Args[1] == "--help" || os.Args[1] == "-h" {
 		printUsage(os.Args[0])
 		return
 	}
 
-	t := Trantor(cfg, false)
-	cmd := Cmd(t)
+	t := Trantor(cfg, notifications, false)
+	cmd := Cmd(t, notifications)
 	cmd.OneCmd(strings.Join(os.Args[1:], " "))
+	cmd.PostCmd("", true)
 }
 
-func shell(cfg *Config) {
-	t := Trantor(cfg, true)
+func shell(cfg *Config, notifications chan Notification) {
+	t := Trantor(cfg, notifications, true)
 	printLoading()
 	idx, err := t.Index()
 	if err != nil {
@@ -40,7 +42,7 @@ func shell(cfg *Config) {
 	}
 	printWelcome(idx)
 
-	cmd := Cmd(t)
+	cmd := Cmd(t, notifications)
 	cmd.SetBooks(idx.Last_added)
 	cmd.Loop()
 }

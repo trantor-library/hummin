@@ -115,6 +115,6 @@ func printExit() {
 	fmt.Println(chalk.Green, "goodbye!", chalk.Reset)
 }
 
-func printDownloadFinished(title string) {
-	fmt.Println(chalk.Yellow, "Download of", title, "finished", chalk.Reset)
+func printNotification(str string) {
+	fmt.Println(chalk.Yellow, ">> ", str, chalk.Reset)
 }
